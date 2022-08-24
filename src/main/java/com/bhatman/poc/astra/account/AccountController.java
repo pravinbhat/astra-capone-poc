@@ -3,6 +3,7 @@ package com.bhatman.poc.astra.account;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class AccountController {
 
 	@Autowired
 	AccountRepo accountRepo;
-	
+
 	@Autowired
 	MetricRegistry registry;
 
@@ -43,12 +44,6 @@ public class AccountController {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}
 
-		Map<String, Metric> metricsMap = registry.getMetrics();
-		metricsMap.entrySet().stream().filter(entry -> entry.getKey().contains("speculative-executions")).forEach(entry -> {
-			System.out.println("Metric Name: " + entry.getKey());
-			System.out.println("Metric Val: " + ((Counter) entry.getValue()).getCount());
-		});
-
 		return new ResponseEntity<>(accounts, HttpStatus.OK);
 	}
 
@@ -56,6 +51,16 @@ public class AccountController {
 	public ResponseEntity<AccountResponse> add(@RequestBody Account newAccount) {
 		Account account = accountRepo.save(new Account(Uuids.timeBased(), newAccount.getAccountName()));
 		return new ResponseEntity<>(new AccountResponse(account, "Account created!"), HttpStatus.CREATED);
+	}
+
+	@GetMapping("/metrics")
+	public ResponseEntity<String> get() {
+		Map<String, Metric> metricsMap = registry.getMetrics();
+		Entry<String, Metric> val = metricsMap.entrySet().stream()
+				.filter(entry -> entry.getKey().contains("speculative-executions")).findAny().get();
+		String ret = "Metric Name: " + val.getKey() + " Val: " + ((Counter) val.getValue()).getCount();
+
+		return new ResponseEntity<>(ret, HttpStatus.OK);
 	}
 
 	@GetMapping("/{accountId}")
@@ -72,14 +77,15 @@ public class AccountController {
 	@PutMapping("/{accountId}")
 	public ResponseEntity<AccountResponse> update(@RequestBody Account updateAccount, @PathVariable UUID accountId) {
 		Objects.requireNonNull(updateAccount);
-		if(!accountId.equals(updateAccount.getAccountId())) {
+		if (!accountId.equals(updateAccount.getAccountId())) {
 			// "Account Id provided does not match the value in path"
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		
+
 		ResponseEntity<AccountResponse> re = get(accountId);
-		//Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Account exists for Id " + accountId);
-		if(!re.getStatusCode().equals(HttpStatus.OK)) {
+		// Assert.isTrue(re.getStatusCode().equals(HttpStatus.OK), "No such Account
+		// exists for Id " + accountId);
+		if (!re.getStatusCode().equals(HttpStatus.OK)) {
 			// "Account Id provided does not match the value in path"
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}

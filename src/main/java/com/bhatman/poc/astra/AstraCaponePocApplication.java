@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Profile;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.internal.core.specex.ConstantSpeculativeExecutionPolicy;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ AstraConfig.class, AstraConfigLocal.class })
@@ -38,40 +39,35 @@ public class AstraCaponePocApplication {
 		Path bundle = astraProperties.getSecureConnectBundle().toPath();
 		return builder -> builder.withCloudSecureConnectBundle(bundle);
 	}
-	
+
 	@Bean
 	@Profile("local")
-    DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
-        return builder -> {
-        	builder.withString(REQUEST_DEFAULT_IDEMPOTENCE, "true");
-        	builder.withString(SPECULATIVE_EXECUTION_POLICY_CLASS, "ConstantSpeculativeExecutionPolicy");
-        	builder.withString(SPECULATIVE_EXECUTION_MAX, "3");
-        	builder.withString(SPECULATIVE_EXECUTION_DELAY, "2 milliseconds");
-            
-        	builder.withStringList(METRICS_SESSION_ENABLED, cassandraProperties.getSessionMetrics());
-            builder.withStringList(METRICS_NODE_ENABLED, cassandraProperties.getNodeMetrics());
-        };
-    }
+	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
+		return builder -> {
+			builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
+			builder.withBoolean(SPECULATIVE_EXECUTION_POLICY_CLASS, true);
+			builder.withClass(SPECULATIVE_EXECUTION_POLICY_CLASS, ConstantSpeculativeExecutionPolicy.class);
+			builder.withInt(SPECULATIVE_EXECUTION_MAX, 3);
+			builder.withInt(SPECULATIVE_EXECUTION_DELAY, 1);
 
-	
+			builder.withStringList(METRICS_SESSION_ENABLED, cassandraProperties.getSessionMetrics());
+			builder.withStringList(METRICS_NODE_ENABLED, cassandraProperties.getNodeMetrics());
+		};
+	}
+
 	@Bean
 	@Profile("local")
 	public MetricRegistry getMetricsbean(CqlSession cqlSession) {
-		return cqlSession.getMetrics()
-			    .orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
-			    .getRegistry();
+		return cqlSession.getMetrics().orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
+				.getRegistry();
 	}
 
 	@Bean
 	@Profile("local")
 	public JmxReporter getJmxReporter(MetricRegistry registry) {
-		JmxReporter reporter =
-			    JmxReporter.forRegistry(registry)
-			        .inDomain("com.bhatman.poc.astra.metrics")
-			        .build();
-			reporter.start();
-			return reporter;
+		JmxReporter reporter = JmxReporter.forRegistry(registry).inDomain("com.bhatman.poc.astra.metrics").build();
+		reporter.start();
+		return reporter;
 	}
-
 
 }
