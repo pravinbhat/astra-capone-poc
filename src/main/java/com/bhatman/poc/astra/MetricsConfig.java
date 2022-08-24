@@ -3,14 +3,13 @@ package com.bhatman.poc.astra;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
 
 import lombok.Data;
 
 @Data
-@Profile("local")
 @ConfigurationProperties(prefix = "cassandra.metrics")
-public class AstraConfigLocal {
+public class MetricsConfig {
 	private List<String> sessionMetrics;
 	private List<String> nodeMetrics;
+
 }

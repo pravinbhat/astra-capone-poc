@@ -23,7 +23,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.internal.core.specex.ConstantSpeculativeExecutionPolicy;
 
 @SpringBootApplication
-@EnableConfigurationProperties({ AstraConfig.class, AstraConfigLocal.class })
+@EnableConfigurationProperties({ AstraConfig.class, MetricsConfig.class })
 public class AstraCaponePocApplication {
 
 	public static void main(String[] args) {
@@ -41,7 +41,7 @@ public class AstraCaponePocApplication {
 	}
 
 	@Bean
-	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
+	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(MetricsConfig cassandraProperties) {
 		return builder -> {
 			builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
 			builder.withBoolean(SPECULATIVE_EXECUTION_POLICY_CLASS, true);
@@ -61,7 +61,6 @@ public class AstraCaponePocApplication {
 	}
 
 	@Bean
-	@Profile("local")
 	public JmxReporter getJmxReporter(MetricRegistry registry) {
 		JmxReporter reporter = JmxReporter.forRegistry(registry).inDomain("com.bhatman.poc.astra.metrics").build();
 		reporter.start();
