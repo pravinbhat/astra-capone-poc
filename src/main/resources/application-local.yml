@@ -18,12 +18,6 @@ server.port: 8080
 datastax.astra:
     secure-connect-bundle: secure-connect.zip
 
-astra.db:
-  id: 84fb5b23-0476-4789-8eb4-59d553216d74
-  region: us-east-1
-  keyspace: test_ks
-  application.token: AstraCS:ntRECwopxDYoFIcRKcRMdETi:f8d3d4872d7eb4059382c41b18a34ce7856cc20b97d97726bd3ccd663b090c58
-  timeout: 5
 
 management:
   health:
