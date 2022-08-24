@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.datastax.oss.driver.api.core.CqlSession;
 
 @SpringBootApplication
@@ -59,6 +60,17 @@ public class AstraCaponePocApplication {
 		return cqlSession.getMetrics()
 			    .orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
 			    .getRegistry();
+	}
+
+	@Bean
+	@Profile("local")
+	public JmxReporter getJmxReporter(MetricRegistry registry) {
+		JmxReporter reporter =
+			    JmxReporter.forRegistry(registry)
+			        .inDomain("com.bhatman.poc.astra.metrics")
+			        .build();
+			reporter.start();
+			return reporter;
 	}
 
 
