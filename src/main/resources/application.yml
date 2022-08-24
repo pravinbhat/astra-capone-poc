@@ -4,8 +4,8 @@ spring:
   data:
     cassandra:
       keyspace-name: test_ks
-      username: u
-      password: p
+      username: <client-id>
+      password: <client-secret>
       schema-action: create-if-not-exists
       request:
         timeout: 10s
@@ -25,3 +25,11 @@ astra.db:
   application.token: 
   timeout: 5
 
+cassandra.metrics:
+  session-metrics:
+    - bytes-sent
+    - connected-nodes
+  node-metrics:
+    - pool.open-connections
+    - pool.in-flight
+    - speculative-executions

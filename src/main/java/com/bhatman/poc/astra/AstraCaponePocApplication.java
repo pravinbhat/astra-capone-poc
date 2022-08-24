@@ -41,7 +41,6 @@ public class AstraCaponePocApplication {
 	}
 
 	@Bean
-	@Profile("local")
 	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(AstraConfigLocal cassandraProperties) {
 		return builder -> {
 			builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
@@ -56,7 +55,6 @@ public class AstraCaponePocApplication {
 	}
 
 	@Bean
-	@Profile("local")
 	public MetricRegistry getMetricsbean(CqlSession cqlSession) {
 		return cqlSession.getMetrics().orElseThrow(() -> new IllegalStateException("Metrics are disabled"))
 				.getRegistry();
