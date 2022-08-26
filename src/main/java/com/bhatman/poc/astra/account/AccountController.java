@@ -2,8 +2,6 @@ package com.bhatman.poc.astra.account;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,9 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricRegistry;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 @RestController
@@ -31,9 +26,6 @@ public class AccountController {
 
 	@Autowired
 	AccountRepo accountRepo;
-
-	@Autowired
-	MetricRegistry registry;
 
 	@GetMapping
 	public ResponseEntity<List<Account>> all() throws Exception {
@@ -51,16 +43,6 @@ public class AccountController {
 	public ResponseEntity<AccountResponse> add(@RequestBody Account newAccount) {
 		Account account = accountRepo.save(new Account(Uuids.timeBased(), newAccount.getAccountName()));
 		return new ResponseEntity<>(new AccountResponse(account, "Account created!"), HttpStatus.CREATED);
-	}
-
-	@GetMapping("/metrics")
-	public ResponseEntity<String> get() {
-		Map<String, Metric> metricsMap = registry.getMetrics();
-		Entry<String, Metric> val = metricsMap.entrySet().stream()
-				.filter(entry -> entry.getKey().contains("speculative-executions")).findAny().get();
-		String ret = "Metric Name: " + val.getKey() + " Val: " + ((Counter) val.getValue()).getCount();
-
-		return new ResponseEntity<>(ret, HttpStatus.OK);
 	}
 
 	@GetMapping("/{accountId}")
