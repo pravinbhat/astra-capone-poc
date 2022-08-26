@@ -23,7 +23,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.internal.core.specex.ConstantSpeculativeExecutionPolicy;
 
 @SpringBootApplication
-@EnableConfigurationProperties({ AstraConfig.class, MetricsConfig.class })
+@EnableConfigurationProperties({ AstraConfig.class, MetricsConfig.class, SpeculativeConfig.class })
 public class AstraCaponePocApplication {
 
 	public static void main(String[] args) {
@@ -35,22 +35,23 @@ public class AstraCaponePocApplication {
 	 */
 	@Bean
 	@Profile("!local")
-	public CqlSessionBuilderCustomizer sessionBuilderCustomizer(AstraConfig astraProperties) {
-		Path bundle = astraProperties.getSecureConnectBundle().toPath();
+	public CqlSessionBuilderCustomizer sessionBuilderCustomizer(AstraConfig astraConfig) {
+		Path bundle = astraConfig.getSecureConnectBundle().toPath();
 		return builder -> builder.withCloudSecureConnectBundle(bundle);
 	}
 
 	@Bean
-	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(MetricsConfig cassandraProperties) {
+	DriverConfigLoaderBuilderCustomizer configLoaderBuilderCustomizer(MetricsConfig metricsConfig,
+			SpeculativeConfig speculativeConfig) {
 		return builder -> {
 			builder.withBoolean(REQUEST_DEFAULT_IDEMPOTENCE, true);
 			builder.withBoolean(SPECULATIVE_EXECUTION_POLICY_CLASS, true);
 			builder.withClass(SPECULATIVE_EXECUTION_POLICY_CLASS, ConstantSpeculativeExecutionPolicy.class);
-			builder.withInt(SPECULATIVE_EXECUTION_MAX, 3);
-			builder.withInt(SPECULATIVE_EXECUTION_DELAY, 1);
+			builder.withInt(SPECULATIVE_EXECUTION_MAX, speculativeConfig.getRetryTimes());
+			builder.withInt(SPECULATIVE_EXECUTION_DELAY, speculativeConfig.getDelayMillis());
 
-			builder.withStringList(METRICS_SESSION_ENABLED, cassandraProperties.getSessionMetrics());
-			builder.withStringList(METRICS_NODE_ENABLED, cassandraProperties.getNodeMetrics());
+			builder.withStringList(METRICS_SESSION_ENABLED, metricsConfig.getSessionMetrics());
+			builder.withStringList(METRICS_NODE_ENABLED, metricsConfig.getNodeMetrics());
 		};
 	}
 

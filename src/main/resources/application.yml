@@ -33,3 +33,7 @@ cassandra.metrics:
     - pool.open-connections
     - pool.in-flight
     - speculative-executions
+    
+speculative-executions:
+  retry-times: 3
+  delay-millis: 2
